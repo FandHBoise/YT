@@ -10,6 +10,7 @@ Research topics → write scripts → generate narration and visuals → assembl
 
 ## What's new on master
 
+- **v2.11.0 (October 13, 2026):** Gemini thinking models now pass the readiness check, image-generation failures explain exactly what to fix, Analytics shows whole-channel YouTube statistics (including videos published outside AgentTube), and the dashboard listens on this machine only by default. Set `HOST=0.0.0.0` together with `API_KEY` if you open it from other devices. See the [changelog](CHANGELOG.md).
 - **v2.10.0 is now on master:** DarkzSEO discoverability audits, controlled growth experiments, and outcome-aware channel operation are available together in the approval-first workflow.
 
 ### September 21, 2026 reliability hotfixes

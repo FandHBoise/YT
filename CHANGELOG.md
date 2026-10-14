@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v2.11.0 — 2026-10-13
 
 - Fixed the readiness text probe failing on thinking Gemini models (`gemini-3.7-flash`, `gemini-3.1-pro-preview`): the probe budget now leaves room for thoughts, and a Gemini response that runs out of tokens before writing text is retried once with a larger budget (#63)
 - Image generation failures now show the provider's actual error and a concrete fix (billing, invalid key, unavailable model, region) instead of a bare "failed:" line, including when `NODE_ENV=production` (#65)
