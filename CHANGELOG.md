@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Fixed the readiness text probe failing on thinking Gemini models (`gemini-3.7-flash`, `gemini-3.1-pro-preview`): the probe budget now leaves room for thoughts, and a Gemini response that runs out of tokens before writing text is retried once with a larger budget (#63)
+- Image generation failures now show the provider's actual error and a concrete fix (billing, invalid key, unavailable model, region) instead of a bare "failed:" line, including when `NODE_ENV=production` (#65)
+- Image generation now falls back to Gemini when OpenAI image generation fails (and the other way round) instead of dropping straight to simulated visuals (#65)
+- Added a whole-channel YouTube snapshot to Analytics (lifetime subscribers, views, and videos, plus 28-day views, watch hours, and subscriber change) that covers videos published outside Lumen and reports a disabled YouTube Analytics API instead of showing zeroes (#66)
+- The dashboard server now listens on `127.0.0.1` by default; set `HOST=0.0.0.0` (with `API_KEY`) for network access (#66)
+- Credential and OAuth token files are now written owner-only (`0600`), and FFmpeg inputs for looped provider clips are bounded to their timeline slot (#66)
 - Bundled the DarkzSEO-compatible content audit so the preflight no longer depends on the unpublished 1.4 Python package; external 1.4+ checkouts remain opt-in through `DARKZSEO_PATH`
 - Fixed regenerated narration timing, CTA metadata and template-placeholder speech leaks, configured visual-style propagation, and null manual strategy contexts
 - Added explicit reschedule, publish-now, and delete-schedule controls while keeping generated content when a schedule is removed

@@ -6,6 +6,13 @@ const chalk = require('chalk');
 const { Logger } = require('./logger');
 const { PROVIDERS, GEMINI_MODELS, GEMINI_DEFAULT_MODEL } = require('./ai-text-service');
 
+// API keys and OAuth tokens are owner-only (0600). writeFile's mode applies only
+// when the file is created, so files written by older versions are tightened too.
+async function writePrivateFile(filePath, contents) {
+  await fs.writeFile(filePath, contents, { mode: 0o600 });
+  await fs.chmod(filePath, 0o600).catch(() => {});
+}
+
 class CredentialManager {
   constructor() {
     this.logger = new Logger('CredentialManager');
@@ -46,12 +53,12 @@ class CredentialManager {
 
   async saveCredentials() {
     await fs.mkdir(path.dirname(this.credentialsPath), { recursive: true });
-    await fs.writeFile(this.credentialsPath, JSON.stringify(this.credentials, null, 2));
+    await writePrivateFile(this.credentialsPath, JSON.stringify(this.credentials, null, 2));
   }
 
   async saveTokens() {
     await fs.mkdir(path.dirname(this.tokensPath), { recursive: true });
-    await fs.writeFile(this.tokensPath, JSON.stringify(this.tokens, null, 2));
+    await writePrivateFile(this.tokensPath, JSON.stringify(this.tokens, null, 2));
   }
 
   // YouTube API Authentication

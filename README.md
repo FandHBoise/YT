@@ -332,6 +332,7 @@ OPENAI_API_KEY=sk-...
 # App config
 NODE_ENV=production
 PORT=3456
+# HOST=127.0.0.1         # default: this machine only; use 0.0.0.0 for LAN access (set API_KEY too)
 CHANNEL_NAME=Your Channel Name
 TARGET_AUDIENCE=Your target audience
 YOUTUBE_REGION=US

@@ -321,6 +321,52 @@ function renderAnalytics(analytics, learning = {}) {
   renderRetention(learning.retention || {});
 }
 
+async function loadChannelSnapshot(refresh = false) {
+  const button = $('#channel-snapshot-refresh');
+  button.disabled = true;
+  try {
+    const data = await api(`/api/analytics/channel${refresh ? '?refresh=1' : ''}`);
+    renderChannelSnapshot(data.result || {});
+  } catch (error) {
+    renderChannelSnapshot({ available: false, reason: error.message });
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function renderChannelSnapshot(snapshot) {
+  const container = $('#channel-snapshot');
+  const note = $('#channel-snapshot-note');
+  if (!snapshot.available) {
+    $('#channel-snapshot-title').textContent = 'Channel snapshot';
+    container.innerHTML = empty(snapshot.reason || 'Channel statistics are unavailable.');
+    note.textContent = 'Whole-channel totals from YouTube, including videos published outside Lumen.';
+    return;
+  }
+  // null means YouTube did not provide the value; it is shown as unavailable, never as 0.
+  const count = value => (value === null || value === undefined ? 'Unavailable' : Number(value).toLocaleString());
+  const tile = (name, value, hint = '') => `<div><span>${escapeHTML(name)}</span><strong>${escapeHTML(value)}</strong>${hint ? `<small>${escapeHTML(hint)}</small>` : ''}</div>`;
+  const { channel, recent = {} } = snapshot;
+  $('#channel-snapshot-title').textContent = channel.title || 'Channel snapshot';
+  let html = '<p class="channel-snapshot-section">Lifetime</p>'
+    + tile('Subscribers', channel.subscribersHidden ? 'Hidden' : count(channel.subscribers), channel.subscribersHidden ? 'hidden on this channel' : '')
+    + tile('Views', count(channel.views))
+    + tile('Videos', count(channel.videos))
+    + tile('Updated', timeAgo(snapshot.fetchedAt) || 'just now');
+  html += `<p class="channel-snapshot-section">Last 28 days${recent.startDate ? ` · ${escapeHTML(recent.startDate)} to ${escapeHTML(recent.endDate)}` : ''}</p>`;
+  if (recent.available) {
+    const net = Number(recent.netSubscribers);
+    html += tile('Views', count(recent.views))
+      + tile('Watch hours', count(recent.watchHours))
+      + tile('Subscribers gained', count(recent.subscribersGained), `${count(recent.subscribersLost)} lost`)
+      + tile('Net subscribers', `${net > 0 ? '+' : ''}${count(net)}`);
+  } else {
+    html += `<div class="empty">${escapeHTML(recent.reason || '28-day analytics are unavailable.')}${recent.activationUrl ? ` <a href="${escapeHTML(recent.activationUrl)}" target="_blank" rel="noopener noreferrer">Enable YouTube Analytics API</a>` : ''}</div>`;
+  }
+  container.innerHTML = html;
+  note.textContent = 'Whole-channel totals from YouTube, including videos published outside Lumen. Analytics data lags about two days.';
+}
+
 function formatOutcomeValue(value, kind = 'number', currency = 'USD') {
   if (value === null || value === undefined) return 'Unavailable';
   const number = Number(value);
@@ -797,6 +843,8 @@ function switchView(view) {
   $('#view-eyebrow').textContent = titles[view][0];
   $('#view-title').textContent = titles[view][1];
   location.hash = view;
+  // Loaded on demand rather than in the 8-second dashboard poll to spare API quota.
+  if (view === 'analytics') loadChannelSnapshot();
 }
 
 function selectOptions(options, selected) {
@@ -1626,6 +1674,7 @@ document.addEventListener('change', event => {
 $('#generate-button').addEventListener('click', () => $('#generate-dialog').showModal());
 $('#add-idea-button').addEventListener('click', () => $('#idea-dialog').showModal());
 $('#refresh-button').addEventListener('click', () => refreshDashboard());
+$('#channel-snapshot-refresh').addEventListener('click', () => loadChannelSnapshot(true));
 $('#pipeline-filter').addEventListener('change', () => renderPipeline(ui.state?.pipeline || []));
 
 $('#experiment-create-form').addEventListener('submit', async event => {

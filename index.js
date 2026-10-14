@@ -30,6 +30,10 @@ const { DiscoverabilityService } = require('./utils/discoverability-service');
 const { version } = require('./package.json');
 const chalk = require('chalk');
 
+function isLoopbackHost(host) {
+  return ['127.0.0.1', '::1', 'localhost'].includes(String(host).toLowerCase()) || /^127\./.test(String(host));
+}
+
 class YouTubeAutomationAgent {
   constructor() {
     this.logger = new Logger('MainAgent');
@@ -425,6 +429,18 @@ class YouTubeAutomationAgent {
         res.json({ ...analytics, learning });
       } catch (error) {
         res.status(500).json({ error: error.message });
+      }
+    });
+
+    this.app.get('/api/analytics/channel', async (req, res) => {
+      try {
+        if (!this.agents.analytics?.getChannelSnapshot) {
+          return res.json({ success: true, result: { available: false, reason: 'Connect YouTube with npm run walkthrough to see channel statistics.' } });
+        }
+        const result = await this.agents.analytics.getChannelSnapshot({ refresh: req.query.refresh === '1' });
+        return res.json({ success: true, result });
+      } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
       }
     });
 
@@ -1832,8 +1848,14 @@ class YouTubeAutomationAgent {
     }
     
     const PORT = process.env.PORT || 3456;
-    this.app.listen(PORT, () => {
-      console.log(chalk.green(`\n✅ YouTube Automation Agent running on port ${PORT}`));
+    // Loopback by default: mutating routes are open whenever API_KEY is unset,
+    // so the dashboard must not be reachable from the network unless asked.
+    const HOST = process.env.HOST || '127.0.0.1';
+    this.app.listen(PORT, HOST, () => {
+      console.log(chalk.green(`\n✅ YouTube Automation Agent running on ${HOST}:${PORT}`));
+      if (!isLoopbackHost(HOST) && !process.env.API_KEY) {
+        console.log(chalk.yellow(`⚠️  HOST=${HOST} exposes the dashboard to your network without API_KEY. Set API_KEY in .env to protect generation, approval, and publishing routes.`));
+      }
       console.log(chalk.gray('─'.repeat(50)));
       console.log(chalk.white('📊 Dashboard: ') + chalk.cyan(`http://localhost:${PORT}`));
       console.log(chalk.white('🔧 API Health: ') + chalk.cyan(`http://localhost:${PORT}/health`));

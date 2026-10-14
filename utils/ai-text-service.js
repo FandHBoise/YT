@@ -7,6 +7,8 @@ const GEMINI_MODELS = [
   'gemini-3.5-flash-lite',
 ];
 const GEMINI_DEFAULT_MODEL = GEMINI_MODELS[0];
+// Floor for the single retry after a thinking model exhausts a small budget.
+const GEMINI_THINKING_RETRY_MIN_TOKENS = 1024;
 
 const PROVIDERS = {
   openai: {
@@ -108,16 +110,28 @@ class AITextService {
     if (this.gemini) {
       const config = { maxOutputTokens: maxTokens };
       if (!/^gemini-3\.(?:[5-9]|\d{2,})-/.test(model)) config.temperature = temperature;
-      const response = await this.gemini.models.generateContent({
+      let response = await this.gemini.models.generateContent({
         model,
         contents: prompt,
         config,
       });
-      const text = response && response.text;
-      if (typeof text !== 'string' || !text.trim()) {
-        throw new Error(
-          `${this.providerName} returned an empty response. Check the API key and model quota — free-tier Gemini keys are rate-limited and can return empty output.`
-        );
+      let text = response && response.text;
+
+      // Thinking models (gemini-3.x flash/pro) count thoughts against
+      // maxOutputTokens, so a small budget can be spent before any text is
+      // written. Retry once with room for the thoughts plus the answer.
+      if (!this._hasText(text) && this._geminiFinishReason(response) === 'MAX_TOKENS') {
+        const retryTokens = Math.max(maxTokens * 4, GEMINI_THINKING_RETRY_MIN_TOKENS);
+        response = await this.gemini.models.generateContent({
+          model,
+          contents: prompt,
+          config: { ...config, maxOutputTokens: retryTokens },
+        });
+        text = response && response.text;
+      }
+
+      if (!this._hasText(text)) {
+        throw new Error(this._geminiEmptyResponseMessage(response));
       }
       return text;
     }
@@ -176,6 +190,27 @@ class AITextService {
     }
 
     throw lastError;
+  }
+
+  _hasText(text) {
+    return typeof text === 'string' && text.trim().length > 0;
+  }
+
+  _geminiFinishReason(response) {
+    return response?.candidates?.[0]?.finishReason || null;
+  }
+
+  _geminiEmptyResponseMessage(response) {
+    const finishReason = this._geminiFinishReason(response);
+    const blockReason = response?.promptFeedback?.blockReason;
+    if (finishReason === 'MAX_TOKENS') {
+      const thoughts = response?.usageMetadata?.thoughtsTokenCount;
+      return `${this.providerName} spent its whole output budget${thoughts ? ` (${thoughts} thinking tokens)` : ''} before writing any text. Raise maxTokens, or choose a model that does not think, such as gemini-3.5-flash-lite.`;
+    }
+    if (blockReason || ['SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII', 'RECITATION'].includes(finishReason)) {
+      return `${this.providerName} blocked the response (${blockReason || finishReason}). Rephrase the prompt or topic and try again.`;
+    }
+    return `${this.providerName} returned an empty response${finishReason ? ` (finishReason: ${finishReason})` : ''}. Check the API key and model quota — free-tier Gemini keys are rate-limited and can return empty output.`;
   }
 
   _extractContent(response) {
