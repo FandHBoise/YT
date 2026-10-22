@@ -45,6 +45,7 @@ class SystemTest {
       { name: 'Publishing Safety', test: () => this.testPublishingSafety() },
       { name: 'Multi-Provider Credential Validation', test: () => this.testCredentialValidation() },
       { name: 'AI Text Service Token Compatibility', test: () => this.testAITextServiceTokenParams() },
+      { name: 'Anthropic Claude Text Provider', test: () => this.testAnthropicTextProvider() },
       { name: 'Placeholder Scheduling Guard', test: () => this.testPlaceholderSchedulingGuard() },
       { name: 'FFmpeg Resolution', test: () => this.testFFmpegResolution() },
       { name: 'Gemini Media Provider Selection', test: () => this.testGeminiMediaProvider() },
@@ -2698,6 +2699,87 @@ class SystemTest {
     }
 
     this.logger.info('Credential validation test completed successfully');
+  }
+
+  async testAnthropicTextProvider() {
+    const { AITextService, PROVIDERS } = require('./utils/ai-text-service');
+
+    const savedEnv = {};
+    const envKeys = [...Object.values(PROVIDERS).map(p => p.envKey), 'GEMINI_API_KEY'];
+    for (const key of envKeys) {
+      savedEnv[key] = process.env[key];
+      delete process.env[key];
+    }
+
+    try {
+      const service = new AITextService({
+        aiProvider: { provider: 'anthropic', apiKey: 'sk-ant-test', model: 'claude-opus-5-5' }
+      });
+      if (service.providerName !== 'Anthropic Claude' || !service.anthropic || service.client) {
+        throw new Error('Anthropic credentials did not initialize the official Anthropic client');
+      }
+      if (!service.isAvailable()) {
+        throw new Error('Anthropic provider reports unavailable');
+      }
+
+      // Claude 5-family models reject temperature; the request must carry
+      // model, max_tokens and the prompt only.
+      const calls = [];
+      service.anthropic.messages.create = async (params) => {
+        calls.push(params);
+        return { stop_reason: 'end_turn', content: [{ type: 'thinking', thinking: '' }, { type: 'text', text: '{"ok":' }, { type: 'text', text: 'true}' }] };
+      };
+      const text = await service.generateText('ping', { maxTokens: 512, temperature: 0 });
+      if (text !== '{"ok":true}') {
+        throw new Error(`Anthropic text blocks were not joined correctly: ${text}`);
+      }
+      const request = calls[0];
+      if (request.model !== 'claude-opus-5-5' || request.max_tokens !== 512 || 'temperature' in request) {
+        throw new Error(`Anthropic request has the wrong shape: ${JSON.stringify(request)}`);
+      }
+      if (!Array.isArray(request.messages) || request.messages[0]?.content !== 'ping') {
+        throw new Error('Anthropic request did not carry the prompt');
+      }
+
+      service.anthropic.messages.create = async () => ({
+        stop_reason: 'refusal', stop_details: { type: 'refusal', category: 'general_harms' }, content: []
+      });
+      let refusalError = null;
+      try { await service.generateText('x'); } catch (error) { refusalError = error; }
+      if (!refusalError || !/declined/.test(refusalError.message)) {
+        throw new Error('A Claude refusal was not reported clearly');
+      }
+
+      service.anthropic.messages.create = async () => ({ stop_reason: 'max_tokens', content: [] });
+      let emptyError = null;
+      try { await service.generateText('x'); } catch (error) { emptyError = error; }
+      if (!emptyError || !/maxTokens/.test(emptyError.message)) {
+        throw new Error('An empty Claude response was not explained');
+      }
+
+      // ANTHROPIC_API_KEY alone must select Claude with the default model
+      process.env.ANTHROPIC_API_KEY = 'sk-ant-env';
+      const fromEnv = new AITextService({});
+      if (fromEnv.providerName !== 'Anthropic Claude' || fromEnv.model !== PROVIDERS.anthropic.defaultModel) {
+        throw new Error('ANTHROPIC_API_KEY did not select the Anthropic provider');
+      }
+
+      const manager = new CredentialManager();
+      manager.credentials = { youtube: { client_id: 'x' }, aiProvider: { provider: 'anthropic', apiKey: 'sk-ant-test' } };
+      if (manager.getMissingCredentials().length !== 0) {
+        throw new Error('Anthropic configuration was incorrectly reported as missing credentials');
+      }
+    } finally {
+      for (const key of envKeys) {
+        if (savedEnv[key] === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = savedEnv[key];
+        }
+      }
+    }
+
+    this.logger.info('Anthropic text provider test completed successfully');
   }
 
   async testAITextServiceTokenParams() {

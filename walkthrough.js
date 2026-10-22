@@ -35,6 +35,23 @@ const AI_PROVIDER_GUIDE = {
     },
     validationCreds: (apiKey, model) => ({ gemini: { apiKey, model } })
   },
+  anthropic: {
+    label: 'Anthropic Claude — Opus, Sonnet and Haiku (pay per use)',
+    keyUrl: 'https://console.anthropic.com/settings/keys',
+    keyHint: 'starts with "sk-ant-"',
+    instructions: [
+      'Sign in to the Anthropic Console and add credit under Billing',
+      'Open API Keys and click "Create Key"',
+      'Copy the key — it is shown only once'
+    ],
+    models: [...PROVIDERS.anthropic.models],
+    defaultModel: PROVIDERS.anthropic.defaultModel,
+    covers: 'scripts only (add a Gemini or OpenAI key for images/voice)',
+    save(credentials, apiKey, model) {
+      credentials.aiProvider = { provider: 'anthropic', apiKey, model };
+    },
+    validationCreds: (apiKey, model) => ({ aiProvider: { provider: 'anthropic', apiKey, model } })
+  },
   openai: {
     label: 'OpenAI — paid text, image, and voice models',
     keyUrl: 'https://platform.openai.com/api-keys',

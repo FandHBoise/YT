@@ -1,4 +1,5 @@
 const OpenAI = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
 const { Logger } = require('./logger');
 
 const GEMINI_MODELS = [
@@ -11,6 +12,14 @@ const GEMINI_DEFAULT_MODEL = GEMINI_MODELS[0];
 const GEMINI_THINKING_RETRY_MIN_TOKENS = 1024;
 
 const PROVIDERS = {
+  anthropic: {
+    name: 'Anthropic Claude',
+    // Uses the official Anthropic SDK rather than an OpenAI-compatible endpoint.
+    sdk: 'anthropic',
+    defaultModel: 'claude-opus-5-5',
+    models: ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'],
+    envKey: 'ANTHROPIC_API_KEY',
+  },
   openai: {
     name: 'OpenAI',
     baseURL: 'https://api.openai.com/v1',
@@ -68,6 +77,7 @@ class AITextService {
   constructor(credentials = {}) {
     this.logger = new Logger('AITextService');
     this.client = null;
+    this.anthropic = null;
     this.gemini = null;
     this.model = null;
     this.providerName = null;
@@ -81,13 +91,13 @@ class AITextService {
     const model = credentials.aiProvider?.model;
 
     if (provider && PROVIDERS[provider] && apiKey) {
-      return this._initOpenAICompatible(PROVIDERS[provider], apiKey, model);
+      return this._initPreset(PROVIDERS[provider], apiKey, model);
     }
 
     for (const [, preset] of Object.entries(PROVIDERS)) {
       const key = process.env[preset.envKey];
       if (key) {
-        return this._initOpenAICompatible(preset, key);
+        return this._initPreset(preset, key);
       }
     }
 
@@ -97,6 +107,20 @@ class AITextService {
     }
 
     this.logger.warn('No AI text provider configured — text generation unavailable');
+  }
+
+  _initPreset(preset, apiKey, model) {
+    if (preset.sdk === 'anthropic') {
+      return this._initAnthropic(preset, apiKey, model);
+    }
+    return this._initOpenAICompatible(preset, apiKey, model);
+  }
+
+  _initAnthropic(preset, apiKey, model) {
+    this.anthropic = new Anthropic({ apiKey });
+    this.model = model || preset.defaultModel;
+    this.providerName = preset.name;
+    this.logger.info(`${preset.name} initialized (model: ${this.model})`);
   }
 
   _initOpenAICompatible(preset, apiKey, model) {
@@ -150,6 +174,10 @@ class AITextService {
         throw new Error(this._geminiEmptyResponseMessage(response));
       }
       return text;
+    }
+
+    if (this.anthropic) {
+      return this._generateAnthropic(prompt, model, maxTokens);
     }
 
     if (!this.client) {
@@ -208,6 +236,36 @@ class AITextService {
     throw lastError;
   }
 
+  // Claude 5-family models reject temperature and run adaptive thinking by
+  // default, so the request carries only the model, a token cap and the prompt.
+  async _generateAnthropic(prompt, model, maxTokens) {
+    const response = await this.anthropic.messages.create({
+      model,
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    if (response?.stop_reason === 'refusal') {
+      const detail = response.stop_details?.explanation || response.stop_details?.category;
+      throw new Error(
+        `${this.providerName} declined to answer${detail ? ` (${detail})` : ''}. Rephrase the prompt or topic and try again.`
+      );
+    }
+
+    const text = (response?.content || [])
+      .filter(block => block && block.type === 'text' && typeof block.text === 'string')
+      .map(block => block.text)
+      .join('');
+
+    if (!this._hasText(text)) {
+      const reason = response?.stop_reason === 'max_tokens'
+        ? ' It ran out of output tokens before writing any text; raise maxTokens.'
+        : ' Check the API key and account credit.';
+      throw new Error(`${this.providerName} returned an empty response.${reason}`);
+    }
+    return text;
+  }
+
   _hasText(text) {
     return typeof text === 'string' && text.trim().length > 0;
   }
@@ -249,7 +307,7 @@ class AITextService {
   }
 
   isAvailable() {
-    return !!(this.client || this.gemini);
+    return !!(this.client || this.anthropic || this.gemini);
   }
 }
 

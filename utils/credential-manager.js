@@ -228,6 +228,38 @@ class CredentialManager {
     console.log(chalk.green('✅ Gemini credentials configured successfully!'));
   }
 
+  // Anthropic Claude Setup
+  async setupAnthropicCredentials() {
+    console.log(chalk.cyan('\nAnthropic Claude Setup'));
+    console.log(chalk.gray('Get your API key from: https://console.anthropic.com/settings/keys'));
+    console.log(chalk.gray('Claude writes scripts and metadata; add a Gemini or OpenAI key for images and narration.'));
+
+    const answers = await inquirer.prompt([
+      {
+        type: 'password',
+        name: 'apiKey',
+        message: 'Enter your Anthropic API Key:',
+        validate: input => input.startsWith('sk-ant-') || 'Invalid Anthropic key format (starts with sk-ant-)'
+      },
+      {
+        type: 'list',
+        name: 'model',
+        message: 'Select model:',
+        choices: [...PROVIDERS.anthropic.models],
+        default: PROVIDERS.anthropic.defaultModel
+      }
+    ]);
+
+    this.credentials.aiProvider = {
+      provider: 'anthropic',
+      apiKey: answers.apiKey,
+      model: answers.model
+    };
+
+    await this.saveCredentials();
+    console.log(chalk.green('Anthropic Claude configured successfully!'));
+  }
+
   // OpenRouter Setup
   async setupOpenRouterCredentials() {
     console.log(chalk.cyan('\nOpenRouter Setup'));
@@ -705,6 +737,7 @@ class CredentialManager {
         choices: [
           { name: 'OpenAI (GPT-6.1 Sol)', value: 'openai' },
           { name: 'Google Gemini (Gemini 3.8 Flash)', value: 'gemini' },
+          { name: 'Anthropic Claude (Opus 5.5)', value: 'anthropic' },
           { name: 'OpenRouter (400+ models, one API key)', value: 'openrouter' },
           { name: 'Kimi (Moonshot AI — K3)', value: 'kimi' },
           { name: 'MiMo (Xiaomi — V2.6 Pro)', value: 'mimo' },
@@ -718,6 +751,7 @@ class CredentialManager {
     switch (service) {
       case 'openai': return await this.setupOpenAICredentials();
       case 'gemini': return await this.setupGeminiCredentials();
+      case 'anthropic': return await this.setupAnthropicCredentials();
       case 'openrouter': return await this.setupOpenRouterCredentials();
       case 'kimi': return await this.setupKimiCredentials();
       case 'mimo': return await this.setupMiMoCredentials();

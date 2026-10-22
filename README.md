@@ -18,7 +18,7 @@ It researches topics, writes scripts, generates narration and visuals, assembles
 - **Real output only.** Simulated or placeholder media is clearly marked and can never be approved or uploaded.
 - **Self-hosted.** Your keys, media, and channel data stay on your machine.
 - **Learns from evidence, with your sign-off.** Lessons from analytics, retention curves, and comments shape future videos only after you approve them.
-- **Your choice of providers.** Eight text providers or OpenRouter, five AI video providers, or free local slideshow rendering.
+- **Your choice of providers.** Nine text providers or OpenRouter, five AI video providers, or free local slideshow rendering.
 
 ## Quick start
 
@@ -110,6 +110,7 @@ Pick one in the walkthrough, or set its key in `.env`. The SDK base URL is confi
 | --- | --- | --- | --- |
 | **Google Gemini** | Gemini 3.8 Flash, Gemini 4 Argon (paid only), 3.5 Flash-Lite | [AI Studio](https://aistudio.google.com/apikey) | `GEMINI_API_KEY` |
 | **OpenAI** | GPT-6.1 Sol, GPT-6 Astra, GPT-6 Luna | [platform.openai.com](https://platform.openai.com/api-keys) | `OPENAI_API_KEY` |
+| **Anthropic Claude** | Claude Opus 5.5, Sonnet 5.5, Haiku 5.5 | [console.anthropic.com](https://console.anthropic.com/settings/keys) | `ANTHROPIC_API_KEY` |
 | **OpenRouter** | 400+ models through one key; curated defaults are checked against its live catalog | [openrouter.ai](https://openrouter.ai/keys) | `OPENROUTER_API_KEY` |
 | **Kimi (Moonshot AI)** | Kimi K3, K2.7 Code, K2.6 | [platform.kimi.ai](https://platform.kimi.ai) | `MOONSHOT_API_KEY` |
 | **MiMo (Xiaomi)** | MiMo V2.6 Pro, V2.6 Flash | [mimo.mi.com](https://mimo.mi.com) | `MIMO_API_KEY` |
@@ -117,7 +118,7 @@ Pick one in the walkthrough, or set its key in `.env`. The SDK base URL is confi
 | **DeepSeek** | DeepSeek V4.1 Flash, V4 Pro | [platform.deepseek.com](https://platform.deepseek.com/api_keys) | `DEEPSEEK_API_KEY` |
 | **MiniMax** | MiniMax M3.1 Flash, M3 | [platform.minimax.io](https://platform.minimax.io/user-center/basic-information/interface-key) | `MINIMAX_TEXT_API_KEY` |
 
-Anthropic Claude is available through OpenRouter (`anthropic/claude-fable-5.1`). OpenRouter, Kimi, MiMo, GLM, DeepSeek, and MiniMax cover scripts only. Add a Gemini or OpenAI key for images and narration, or ElevenLabs for narration.
+Claude Fable 5.1 is available through OpenRouter (`anthropic/claude-fable-5.1`). Anthropic, OpenRouter, Kimi, MiMo, GLM, DeepSeek, and MiniMax cover scripts only. Add a Gemini or OpenAI key for images and narration, or ElevenLabs for narration.
 
 ### Narration and images
 
