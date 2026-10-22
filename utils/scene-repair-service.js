@@ -7,6 +7,14 @@ const { ProvenanceService } = require('./provenance-service');
 
 const VIDEO_EXTENSIONS = new Set(['.mp4']);
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp']);
+// Operator-recorded narration: browser MediaRecorder output plus common audio files.
+const AUDIO_EXTENSIONS = new Set(['.webm', '.ogg', '.opus', '.mp3', '.m4a', '.aac', '.wav', '.flac', '.mp4']);
+const AUDIO_EXTENSION_FOR_TYPE = {
+  'audio/webm': '.webm', 'video/webm': '.webm', 'audio/ogg': '.ogg', 'audio/opus': '.opus',
+  'audio/mpeg': '.mp3', 'audio/mp3': '.mp3', 'audio/mp4': '.m4a', 'audio/x-m4a': '.m4a', 'audio/aac': '.aac',
+  'audio/wav': '.wav', 'audio/x-wav': '.wav', 'audio/wave': '.wav', 'audio/flac': '.flac'
+};
+const MIN_RECORDING_SECONDS = 0.5;
 
 function textFromSection(section = {}) {
   if (typeof section.content === 'string') return /\[[^\]]*\]/.test(section.content) ? '' : section.content;
@@ -516,6 +524,109 @@ class SceneRepairService {
       costEvidence: { billed: false }
     });
     return next;
+  }
+
+  /**
+   * Replace narration with a recording the operator made themselves.
+   *
+   * With `options.sceneId` the whole recording becomes that scene's narration.
+   * Without it, the recording is one read-through of the full script: it is split
+   * into per-scene segments in proportion to each scene's word count, so the
+   * existing scene mix, captions and rebuild paths work unchanged. Nothing is
+   * billed and no provider is involved; the scenes record `operator-upload`.
+   */
+  async uploadNarration(productionId, file = {}, options = {}) {
+    const bundle = await this.getEditableBundle(productionId);
+    if (file.rightsConfirmed !== true) {
+      throw this.error('Confirm that this recording is your own voice or one you have the rights to use', 400, 'RIGHTS_CONFIRMATION_REQUIRED');
+    }
+    if (!Buffer.isBuffer(file.buffer) || !file.buffer.length) throw this.error('The narration recording is empty', 400);
+
+    const contentType = String(file.contentType || '').toLowerCase().split(';')[0].trim();
+    const suppliedExtension = path.extname(String(file.filename || '')).toLowerCase();
+    const extension = AUDIO_EXTENSIONS.has(suppliedExtension) ? suppliedExtension : AUDIO_EXTENSION_FOR_TYPE[contentType];
+    if (!extension || (!contentType.startsWith('audio/') && contentType !== 'video/webm' && !AUDIO_EXTENSIONS.has(suppliedExtension))) {
+      throw this.error('Narration recordings must be an audio file (WebM, OGG, MP3, M4A, WAV or FLAC)', 415);
+    }
+
+    const sceneId = options.sceneId ? String(options.sceneId) : null;
+    let targets = bundle.scenes;
+    if (sceneId) {
+      const scene = bundle.scenes.find(item => item.id === sceneId);
+      if (!scene) throw this.error('Scene not found', 404);
+      if (scene.locked) throw this.error('Unlock this scene before replacing its narration', 409);
+      targets = [scene];
+    } else if (bundle.scenes.some(scene => scene.locked)) {
+      throw this.error('Unlock every scene before replacing the whole narration, or upload per scene', 409);
+    }
+    if (!targets.length) throw this.error('No scene manifest is available', 409);
+
+    const directory = path.join(this.dataRoot, 'audio', 'uploads', productionId);
+    const recordedAt = new Date().toISOString();
+    const recordingPath = path.join(directory, `${sceneId || 'full'}_${Date.now()}${extension}`);
+    await fs.mkdir(directory, { recursive: true });
+    await fs.writeFile(recordingPath, file.buffer);
+
+    let totalDuration;
+    try {
+      totalDuration = await this.getMediaDuration(recordingPath);
+    } catch (error) {
+      await fs.unlink(recordingPath).catch(() => {});
+      throw this.error(`The recording could not be decoded as audio: ${error.message}`, 422);
+    }
+    if (!Number.isFinite(totalDuration) || totalDuration < MIN_RECORDING_SECONDS) {
+      await fs.unlink(recordingPath).catch(() => {});
+      throw this.error('The recording is too short to use as narration', 422);
+    }
+
+    const segmentsDirectory = path.join(this.dataRoot, 'audio', 'scenes', productionId);
+    await fs.mkdir(segmentsDirectory, { recursive: true });
+    const ordered = [...targets].sort((a, b) => a.position - b.position);
+    const weights = ordered.map(scene => Math.max(1, String(scene.scriptText || '').trim().split(/\s+/).filter(Boolean).length));
+    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+
+    const updated = [];
+    let start = 0;
+    for (let index = 0; index < ordered.length; index++) {
+      const scene = ordered[index];
+      const isLast = index === ordered.length - 1;
+      const segmentDuration = isLast ? Math.max(0, totalDuration - start) : totalDuration * (weights[index] / totalWeight);
+      const output = path.join(segmentsDirectory, `${String(scene.position).padStart(3, '0')}_r${scene.revision + 1}.mp3`);
+      const slice = ordered.length === 1 ? [] : ['-ss', start.toFixed(2), '-t', segmentDuration.toFixed(2)];
+      await runFFmpeg(['-y', ...slice, '-i', recordingPath, '-vn', '-ac', '1', '-ar', '44100', '-c:a', 'libmp3lame', '-q:a', '2', output]);
+      const duration = Math.max(2, Math.round((segmentDuration + (isLast ? 0.5 : 0)) * 100) / 100);
+      const next = await this.db.updateProductionScene(productionId, scene.id, {
+        audioPath: output,
+        duration,
+        narrationStatus: 'current',
+        narrationProvider: 'operator-upload',
+        narrationModel: null,
+        narrationTaskId: null,
+        narrationError: null,
+        narrationGeneratedAt: recordedAt,
+        narrationCost: { billed: false, provider: 'operator-upload' },
+        status: scene.status === 'visual_stale' ? 'visual_stale' : 'needs_rebuild',
+        revision: scene.revision + 1
+      });
+      await this.db.saveProductionSceneRevision({
+        productionId, sceneId: scene.id, action: 'upload_narration', before: scene, after: next,
+        costEvidence: { billed: false, provider: 'operator-upload', rightsConfirmed: true, recording: recordingPath }
+      });
+      updated.push(next);
+      start += segmentDuration;
+    }
+
+    await this.updateProductionAudioState(bundle, {
+      status: 'partial', path: null, simulated: false, intentionalSilence: false,
+      silenceReason: null, silenceConfirmedAt: null, provider: 'operator-upload', model: null,
+      externalTaskId: null, generatedAt: recordedAt, cost: { billed: false },
+      uploadedRecording: recordingPath, rightsConfirmed: true,
+      error: 'Narration was replaced with your recording; rebuild the final video before approval'
+    });
+    return {
+      productionId, scope: sceneId ? 'scene' : 'production', sceneId,
+      recording: recordingPath, duration: Math.round(totalDuration * 100) / 100, scenes: updated
+    };
   }
 
   async narrationDuration(audioPath, scene) {

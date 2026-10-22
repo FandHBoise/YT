@@ -33,6 +33,7 @@ class SystemTest {
       { name: 'Production Readiness Gate', test: () => this.testProductionReadinessGate() },
       { name: 'Durable Multi-Provider Video Generation', test: () => this.testVideoProviderLayer() },
       { name: 'Scene Repair Studio', test: () => this.testSceneRepairStudio() },
+      { name: 'Operator Narration Recording', test: () => this.testOperatorNarrationRecording() },
       { name: 'Narration Reliability and Recovery', test: () => this.testNarrationReliability() },
       { name: 'Shorts Repurposing Studio', test: () => this.testShortsRepurposingStudio() },
       { name: 'Research and Provenance Desk', test: () => this.testProvenanceDesk() },
@@ -1168,6 +1169,134 @@ class SystemTest {
       await fs.rm(directory, { recursive: true, force: true });
     }
     this.logger.info('Durable multi-provider video generation test completed successfully');
+  }
+
+  async testOperatorNarrationRecording() {
+    const fs = require('fs').promises;
+    const os = require('os');
+    const { SceneRepairService } = require('./utils/scene-repair-service');
+    const { OperatorService } = require('./utils/operator-service');
+    const { runFFmpeg, getMediaDuration, checkFFmpeg } = require('./utils/ffmpeg');
+    if (!await checkFFmpeg()) throw new Error('FFmpeg is required for the narration recording test');
+
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'yaa-own-narration-'));
+    const db = new Database();
+    db.dbPath = path.join(directory, 'narration.db');
+    await db.initialize();
+
+    try {
+      const productionId = 'prod-own-narration';
+      const visualPath = path.join(directory, 'scene.png');
+      const videoPath = path.join(directory, 'video.mp4');
+      await fs.writeFile(visualPath, Buffer.from('visual'));
+      await fs.writeFile(videoPath, Buffer.from('video'));
+      const production = {
+        id: productionId, status: 'simulated',
+        strategy: { topic: 'Own narration' },
+        script: { title: 'Own narration', fullScript: 'An engineer explains a cantilevered desk in their own words for this test production.'.repeat(3) },
+        seo: { title: 'Own narration', description: 'A detailed explanation of recording narration in your own voice for a production.', tags: ['narration', 'voice', 'workflow'] },
+        assets: {
+          audio: { path: path.join(directory, 'missing.mp3.info'), status: 'unavailable', simulated: true, error: 'No live narration provider returned usable audio' },
+          finalVideo: { path: videoPath, simulated: true }, thumbnail: { path: visualPath }
+        },
+        timeline: {}, priority: 50, scheduledPublishTime: new Date(Date.now() + 86400000).toISOString()
+      };
+      await db.saveProductionData(production);
+      await db.saveProductionSnapshot(production);
+      const words = count => Array.from({ length: count }, (_, index) => `word${index}`).join(' ');
+      await db.replaceProductionScenes(productionId, [
+        { id: 'own-1', position: 0, label: 'Hook', scriptText: words(10), prompt: 'Hook', duration: 8, assetType: 'image', assetOrigin: 'generated', assetPath: visualPath, status: 'ready', narrationStatus: 'unavailable', narrationError: 'No narration', rightsConfirmed: true },
+        { id: 'own-2', position: 1, label: 'Engineering', scriptText: words(20), prompt: 'Desk', duration: 8, assetType: 'image', assetOrigin: 'generated', assetPath: visualPath, status: 'ready', narrationStatus: 'unavailable', narrationError: 'No narration', rightsConfirmed: true },
+        { id: 'own-3', position: 2, label: 'Close', scriptText: words(10), prompt: 'Close', duration: 8, assetType: 'image', assetOrigin: 'generated', assetPath: visualPath, status: 'ready', narrationStatus: 'unavailable', narrationError: 'No narration', rightsConfirmed: true }
+      ]);
+
+      // A 4-second "recording", the way a browser or phone would hand it over
+      const recordingPath = path.join(directory, 'take.wav');
+      await runFFmpeg(['-y', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=44100', '-t', '4', recordingPath]);
+      const recording = await fs.readFile(recordingPath);
+
+      const generator = {
+        isUsableAudioFile: async filePath => Boolean(filePath && await fs.stat(filePath).then(stat => stat.size > 0).catch(() => false)),
+        renderMediaTimeline: async (_segments, outputPath) => { await fs.writeFile(outputPath, Buffer.from('visual timeline')); return outputPath; },
+        addAudioToVideo: async (videoPath, audioPath, outputPath) => {
+          if (!await getMediaDuration(audioPath)) throw new Error('mixed narration is not decodable');
+          await fs.copyFile(videoPath, outputPath);
+          return outputPath;
+        }
+      };
+      const service = new SceneRepairService(db, generator, { dataRoot: directory, logger: this.logger });
+
+      const expectCode = async (promise, code, status) => {
+        try { await promise; } catch (error) {
+          if (code && error.code !== code) throw new Error(`Expected ${code}, got ${error.code || error.message}`);
+          if (status && error.status !== status) throw new Error(`Expected HTTP ${status}, got ${error.status}: ${error.message}`);
+          return;
+        }
+        throw new Error(`Expected a ${code || status} rejection`);
+      };
+      await expectCode(service.uploadNarration(productionId, { buffer: recording, contentType: 'audio/wav' }), 'RIGHTS_CONFIRMATION_REQUIRED');
+      await expectCode(service.uploadNarration(productionId, { buffer: Buffer.alloc(0), contentType: 'audio/wav', rightsConfirmed: true }), null, 400);
+      await expectCode(service.uploadNarration(productionId, { buffer: recording, contentType: 'text/plain', filename: 'notes.txt', rightsConfirmed: true }), null, 415);
+      await expectCode(service.uploadNarration(productionId, { buffer: Buffer.from('not audio at all'), contentType: 'audio/wav', filename: 'bad.wav', rightsConfirmed: true }), null, 422);
+      await expectCode(service.uploadNarration(productionId, { buffer: recording, contentType: 'audio/wav', rightsConfirmed: true }, { sceneId: 'nope' }), null, 404);
+
+      // Whole-script take: split by word count (10 / 20 / 10 words over 4 seconds)
+      const result = await service.uploadNarration(productionId, { buffer: recording, contentType: 'audio/webm;codecs=opus', filename: 'narration.wav', rightsConfirmed: true });
+      if (result.scope !== 'production' || result.scenes.length !== 3 || Math.abs(result.duration - 4) > 0.2) {
+        throw new Error(`Whole-production upload returned an unexpected result: ${JSON.stringify({ scope: result.scope, duration: result.duration })}`);
+      }
+      const scenes = await db.listProductionScenes(productionId);
+      for (const scene of scenes) {
+        if (scene.narrationStatus !== 'current' || scene.narrationProvider !== 'operator-upload' || scene.status !== 'needs_rebuild' || scene.revision !== 2) {
+          throw new Error(`Scene ${scene.id} did not take the uploaded narration: ${JSON.stringify(scene)}`);
+        }
+        const measured = await getMediaDuration(scene.audioPath);
+        if (!(measured > 0)) throw new Error(`Scene ${scene.id} narration segment is not decodable`);
+      }
+      const [hook, engineering, close] = scenes;
+      if (Math.abs(hook.duration - 2) > 0.3 || Math.abs(engineering.duration - 2) > 0.3 || Math.abs(close.duration - 2) > 0.6) {
+        throw new Error(`Recording was not split in proportion to word count: ${scenes.map(scene => scene.duration).join(', ')}`);
+      }
+      const audioState = (await db.getProductionBundle(productionId)).assets.audio;
+      if (audioState.simulated !== false || audioState.intentionalSilence !== false || audioState.provider !== 'operator-upload' || !audioState.uploadedRecording) {
+        throw new Error('Production audio state was not updated for the operator recording');
+      }
+      const revisions = await db.listProductionSceneRevisions(productionId);
+      if (revisions.filter(entry => entry.action === 'upload_narration').length !== 3) {
+        throw new Error('Narration upload was not recorded in the scene revision history');
+      }
+      const quality = await new OperatorService(db).runQualityChecks({ ...(await db.getProductionBundle(productionId)), scenes }, {});
+      if (quality.blockingFailures.includes('narration')) {
+        throw new Error('Quality checks still report narration as missing after the operator recording');
+      }
+
+      // One scene only: the whole take becomes that scene's narration
+      const single = await service.uploadNarration(productionId, { buffer: recording, contentType: 'audio/wav', filename: 'take.wav', rightsConfirmed: true }, { sceneId: 'own-2' });
+      const replaced = await db.getProductionScene(productionId, 'own-2');
+      if (single.scope !== 'scene' || Math.abs(replaced.duration - 4.5) > 0.3 || replaced.revision !== 3 || (await db.getProductionScene(productionId, 'own-1')).revision !== 2) {
+        throw new Error('Per-scene narration upload did not replace only the requested scene');
+      }
+
+      await db.updateProductionScene(productionId, 'own-3', { locked: true });
+      await expectCode(service.uploadNarration(productionId, { buffer: recording, contentType: 'audio/wav', rightsConfirmed: true }), null, 409);
+      await expectCode(service.uploadNarration(productionId, { buffer: recording, contentType: 'audio/wav', rightsConfirmed: true }, { sceneId: 'own-3' }), null, 409);
+      await db.updateProductionScene(productionId, 'own-3', { locked: false });
+
+      // The real scene mix must concatenate the uploaded segments into playable audio
+      const rebuilt = await service.rebuild(productionId);
+      const bundle = await db.getProductionBundle(productionId);
+      if (!rebuilt.finalVideo || bundle.assets.audio.provider !== 'scene-mix' || !(await getMediaDuration(bundle.assets.audio.path) > 7)) {
+        throw new Error('Rebuild did not mix the operator narration into the final audio');
+      }
+      if (!bundle.assets.audio.sceneEvidence.every(entry => entry.provider === 'operator-upload')) {
+        throw new Error('Rebuilt audio evidence lost the operator-upload provenance');
+      }
+    } finally {
+      await db.close?.().catch?.(() => {});
+      await fs.rm(directory, { recursive: true, force: true }).catch(() => {});
+    }
+
+    this.logger.info('Operator narration recording test completed successfully');
   }
 
   async testSceneRepairStudio() {

@@ -24,6 +24,10 @@ module.exports = [
       sourceType: 'commonjs',
       globals: {
         AbortController: 'readonly',
+        Blob: 'readonly',
+        MediaRecorder: 'readonly',
+        navigator: 'readonly',
+        URLSearchParams: 'readonly',
         __dirname: 'readonly',
         Buffer: 'readonly',
         clearTimeout: 'readonly',

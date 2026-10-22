@@ -731,6 +731,45 @@ class YouTubeAutomationAgent {
       }
     });
 
+    // Operator-recorded narration: a browser recording or an audio file, for the
+    // whole production or one scene. `rebuild=true` rebuilds the final MP4 in the
+    // same request so a single click gets a reviewable video.
+    this.app.put(
+      '/api/content/:productionId/narration/recording',
+      protect,
+      express.raw({ type: ['audio/*', 'video/webm', 'application/octet-stream'], limit: '200mb' }),
+      async (req, res) => {
+        try {
+          if (!this.scenes) return res.status(503).json({ error: 'Narration recording requires completed setup' });
+          const productionId = req.params.productionId;
+          const result = await this.scenes.uploadNarration(productionId, {
+            buffer: req.body,
+            contentType: req.get('content-type'),
+            filename: req.get('x-file-name'),
+            rightsConfirmed: req.get('x-rights-confirmed') === 'true'
+          }, { sceneId: req.query.sceneId || req.get('x-scene-id') || null });
+
+          let rebuild = null;
+          if (String(req.query.rebuild) === 'true') {
+            try {
+              rebuild = await this.scenes.rebuild(productionId);
+            } catch (error) {
+              rebuild = { error: error.message, blockers: error.details?.blockers || [] };
+            }
+          }
+          await this.refreshContentReview(
+            productionId,
+            rebuild && !rebuild.error
+              ? 'Your narration was added and the final video was rebuilt; review it before approval'
+              : 'Your narration was added; rebuild the final video before approval'
+          );
+          return res.json({ success: true, result: { ...result, scenes: result.scenes.map(scene => this.scenes.decorateScene(scene, productionId)), rebuild } });
+        } catch (error) {
+          return res.status(error.status || 400).json({ success: false, error: error.message, code: error.code, details: error.details });
+        }
+      }
+    );
+
     this.app.put(
       '/api/content/:productionId/scenes/:sceneId/asset',
       protect,

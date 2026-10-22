@@ -89,6 +89,7 @@ Each item links to its walkthrough in the [feature guide](docs/features.md).
 **Review**
 - **Content review:** quality checks, metadata editing, approval, and scheduling for each video.
 - [Scene Repair Studio](docs/features.md#scene-repair-studio-and-narration): edit, reorder, lock, replace, or regenerate a single scene, then rebuild the video.
+- [Record your own narration](docs/features.md#record-your-own-narration): read the script into your microphone from the dashboard, or upload a recording, and the video is rebuilt with your voice. No TTS provider needed.
 - [Evidence desk](docs/features.md#evidence-desk): link each factual claim in the script to a verified source before approval.
 - [Discoverability preflight](docs/features.md#discoverability-preflight): advisory search and AI-answer checks from a bundled DarkzSEO audit. No Python needed.
 
@@ -122,7 +123,7 @@ Claude Fable 5.1 is available through OpenRouter (`anthropic/claude-fable-5.1`).
 
 ### Narration and images
 
-- **Narration** uses the first configured provider in this order: ElevenLabs (Eleven v3, needs `ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID`), OpenAI (`gpt-4o-mini-tts`), then Gemini (`gemini-3.8-flash-tts`). A video without working narration can't be approved.
+- **Narration** uses the first configured provider in this order: ElevenLabs (Eleven v3, needs `ELEVENLABS_API_KEY` and `ELEVENLABS_VOICE_ID`), OpenAI (`gpt-4o-mini-tts`), then Gemini (`gemini-3.8-flash-tts`). You can also record the narration yourself in the dashboard, which needs no provider. A video without working narration can't be approved.
 - **Images** use OpenAI (GPT Image 2) and Gemini (`gemini-3.1-flash-image`, which needs billing enabled), each falling back to the other. With neither, slides use gradient backgrounds and thumbnails come from the built-in designer.
 
 ### Video

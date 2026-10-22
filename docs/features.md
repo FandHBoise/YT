@@ -60,6 +60,12 @@ Paid video regeneration always shows the provider and generated seconds and requ
 
 Narration is fail-closed. The agent records the TTS provider, model, external task when available, generation time, cost evidence, and failure reason for every scene. If narration is missing, simulated, stale, or failed, the production cannot be approved, scheduled, or published. Use **Regenerate narration only** to repair the audio without spending video-generation credits or replacing a visual.
 
+### Record your own narration
+
+Open the **Your own voice** panel inside Scene Repair Studio to narrate a production yourself instead of using a TTS provider. The panel shows the full script as a teleprompter. Press **Record**, read it in one take, press **Stop**, listen back, and choose **Use this recording & rebuild**. The recording is split into per-scene segments in proportion to each scene's word count, every scene is marked `operator-upload`, and the final MP4 is rebuilt in the same step. You can also **Upload file** (WebM, OGG, MP3, M4A, WAV or FLAC) recorded elsewhere, or use **Use my recording** on a single scene card to replace just that scene's narration.
+
+Recording in the browser needs microphone permission and a secure page, which `http://localhost` is; when the dashboard is opened over the network, record with another app and upload the file. Uploads require a rights confirmation, are never billed, and appear in the narration revision history. The scene durations follow the recording, so captions and the slideshow timing stay in sync with your voice.
+
 An intentionally silent production requires a separate operator confirmation and a stored reason of at least 10 characters. The override remains visible in Review Studio, can be reversed, and is included in the narration revision history. Silence is never inferred from a failed provider call.
 
 When the timeline is ready, **Rebuild final video** creates a new MP4 and scene-aware captions while preserving the previous final video path in the production record. Approval stays blocked while any scene is missing, generating, stale, failed, or waiting for rebuild. Approved or scheduled productions are locked against scene repair.

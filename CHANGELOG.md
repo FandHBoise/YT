@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added **Record your own narration** to Scene Repair Studio: record in the browser against a teleprompter of the script or upload an audio file, for the whole production or one scene; the recording is split across scenes by word count, marked `operator-upload`, and the final video is rebuilt in the same step (`PUT /api/content/:id/narration/recording`)
 - Added Anthropic Claude (`ANTHROPIC_API_KEY`) as a direct text provider through the official Anthropic SDK, with Claude Opus 5.5, Sonnet 5.5 and Haiku 5.5 selectable in the walkthrough and setup
 - Refreshed provider defaults and selectors: OpenAI GPT-6.1 Sol (with GPT-6 Astra and Luna), Gemini 3.8 Flash (with Gemini 4 Argon), MiMo V2.6, GLM-5.3 Flash, Claude Fable 5.1, and the current OpenRouter catalog
 - Added DeepSeek (`DEEPSEEK_API_KEY`) and MiniMax M3 text (`MINIMAX_TEXT_API_KEY`) as text providers; the existing `MINIMAX_API_KEY` still only enables MiniMax H3 video

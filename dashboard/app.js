@@ -952,6 +952,7 @@ function renderSceneEditor(item, canReview = true) {
         ? '<button type="button" class="button secondary small" data-require-narration>Require narration</button>'
         : '<button type="button" class="button secondary small" data-intentional-silence>Use intentional silence</button>' : ''}
     </div>
+    ${canReview ? renderNarrationStudio(item, scenes) : ''}
     <div class="scene-summary"><strong>${scenes.length} scenes</strong><span>${Math.round(scenes.reduce((sum, scene) => sum + Number(scene.duration || 0), 0))}s timeline</span><span>${scenes.filter(scene => scene.status !== 'ready').length} pending repairs</span></div>
     <div class="scene-list">
       ${scenes.map((scene, index) => {
@@ -986,12 +987,141 @@ function renderSceneEditor(item, canReview = true) {
             <button type="button" class="text-button" data-scene-narration ${disabled ? 'disabled' : ''}>Regenerate narration only</button>
             <button type="button" class="text-button" data-scene-regenerate ${disabled ? 'disabled' : ''}>Regenerate scene</button>
             <label class="text-button upload-button ${disabled ? 'disabled' : ''}">Replace asset<input type="file" data-scene-upload accept="image/png,image/jpeg,image/webp,video/mp4" ${disabled ? 'disabled' : ''}></label>
+            <label class="text-button upload-button ${disabled ? 'disabled' : ''}">Use my recording<input type="file" data-scene-narration-upload accept="audio/*,.webm,.ogg,.mp3,.m4a,.wav,.flac" ${disabled ? 'disabled' : ''}></label>
             <button type="button" class="text-button" data-scene-lock>${scene.locked ? 'Unlock' : 'Lock'}</button>
           </div>` : ''}
         </article>`;
       }).join('')}
     </div>
   </section>`;
+}
+
+function renderNarrationStudio(item, scenes) {
+  const audio = item.assets?.audio || {};
+  const ownVoice = audio.provider === 'operator-upload' || scenes.some(scene => scene.narrationProvider === 'operator-upload');
+  const script = scenes.map((scene, index) => `<section><h5>${index + 1}. ${escapeHTML(scene.label)}</h5><p>${escapeHTML(scene.scriptText || '')}</p></section>`).join('');
+  return `<div class="narration-studio" data-narration-studio>
+    <div class="narration-studio-head">
+      <div><p class="eyebrow">YOUR OWN VOICE</p><strong>Record or upload your narration</strong>
+      <p>Read the script below in one take and the recording is split across the scenes by word count. Or upload an audio file. ${ownVoice ? 'This production already uses your recording.' : 'No AI voice provider is needed.'}</p></div>
+      <div class="narration-studio-actions">
+        <button type="button" class="button secondary small" data-narration-record>Record</button>
+        <button type="button" class="button secondary small hidden" data-narration-stop>Stop</button>
+        <label class="button secondary small upload-button">Upload file<input type="file" data-narration-upload accept="audio/*,.webm,.ogg,.mp3,.m4a,.wav,.flac"></label>
+      </div>
+    </div>
+    <div class="narration-teleprompter" data-narration-script>${script}</div>
+    <div class="narration-take hidden" data-narration-take>
+      <span class="narration-timer" data-narration-timer>00:00</span>
+      <audio controls data-narration-preview></audio>
+      <button type="button" class="button primary small" data-narration-use>Use this recording &amp; rebuild</button>
+      <button type="button" class="text-button" data-narration-discard>Discard</button>
+    </div>
+    <p class="narration-studio-note" data-narration-status></p>
+  </div>`;
+}
+
+const narrationRecorder = { stream: null, recorder: null, chunks: [], blob: null, startedAt: 0, timer: null };
+
+function narrationMimeType() {
+  if (typeof MediaRecorder === 'undefined') return null;
+  return ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'].find(type => MediaRecorder.isTypeSupported(type)) || '';
+}
+
+function narrationExtension(type) {
+  const base = String(type || '').split(';')[0];
+  return { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3', 'audio/wav': 'wav' }[base] || 'webm';
+}
+
+function narrationStatus(message, isError = false) {
+  const node = $('[data-narration-status]');
+  if (!node) return;
+  node.textContent = message || '';
+  node.classList.toggle('danger-text', isError);
+}
+
+function stopNarrationRecorder() {
+  clearInterval(narrationRecorder.timer);
+  narrationRecorder.timer = null;
+  if (narrationRecorder.recorder && narrationRecorder.recorder.state !== 'inactive') {
+    try { narrationRecorder.recorder.stop(); } catch (_error) { /* already stopped */ }
+  }
+  narrationRecorder.stream?.getTracks().forEach(track => track.stop());
+  narrationRecorder.stream = null;
+  narrationRecorder.recorder = null;
+}
+
+async function startNarrationRecording() {
+  if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+    narrationStatus('This browser cannot record audio here. Record with another app and use Upload file instead.', true);
+    return;
+  }
+  try {
+    narrationRecorder.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (error) {
+    narrationStatus(`Microphone access was refused: ${error.message}`, true);
+    return;
+  }
+  const mimeType = narrationMimeType();
+  narrationRecorder.chunks = [];
+  narrationRecorder.blob = null;
+  narrationRecorder.recorder = new MediaRecorder(narrationRecorder.stream, mimeType ? { mimeType } : undefined);
+  narrationRecorder.recorder.addEventListener('dataavailable', event => { if (event.data?.size) narrationRecorder.chunks.push(event.data); });
+  narrationRecorder.recorder.addEventListener('stop', () => {
+    const type = narrationRecorder.recorder?.mimeType || mimeType || 'audio/webm';
+    narrationRecorder.blob = new Blob(narrationRecorder.chunks, { type });
+    narrationRecorder.stream?.getTracks().forEach(track => track.stop());
+    narrationRecorder.stream = null;
+    const preview = $('[data-narration-preview]');
+    if (preview) preview.src = URL.createObjectURL(narrationRecorder.blob);
+    $('[data-narration-take]')?.classList.remove('hidden');
+    $('[data-narration-record]')?.classList.remove('hidden');
+    $('[data-narration-stop]')?.classList.add('hidden');
+    narrationStatus('Listen back, then use the recording or discard it and record again.');
+  });
+  narrationRecorder.recorder.start(250);
+  narrationRecorder.startedAt = Date.now();
+  $('[data-narration-record]')?.classList.add('hidden');
+  $('[data-narration-stop]')?.classList.remove('hidden');
+  $('[data-narration-take]')?.classList.add('hidden');
+  narrationStatus('Recording. Read the script at a natural pace, then press Stop.');
+  narrationRecorder.timer = setInterval(() => {
+    const seconds = Math.floor((Date.now() - narrationRecorder.startedAt) / 1000);
+    const node = $('[data-narration-timer]');
+    if (node) node.textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+    $('[data-narration-take]')?.classList.remove('hidden');
+  }, 500);
+}
+
+async function uploadNarrationRecording(productionId, file, { sceneId = null, filename } = {}) {
+  if (!confirm(sceneId
+    ? 'Use this recording as the narration for only this scene? Confirm it is your own voice or a recording you have the rights to use.'
+    : 'Use this recording as the narration for the whole video? It replaces every scene\'s narration. Confirm it is your own voice or a recording you have the rights to use.')) return;
+  $('#loading').classList.add('active');
+  try {
+    const query = new URLSearchParams({ rebuild: 'true', ...(sceneId ? { sceneId } : {}) });
+    const data = await api(`/api/content/${encodeURIComponent(productionId)}/narration/recording?${query}`, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+        'x-file-name': filename || file.name || `narration.${narrationExtension(file.type)}`,
+        'x-rights-confirmed': 'true'
+      }
+    });
+    stopNarrationRecorder();
+    const rebuild = data.result?.rebuild;
+    if (rebuild && rebuild.error) {
+      await refreshContentDialog(productionId, 'Your narration was added. Fix the listed issue, then rebuild.');
+      showToast(rebuild.error, 'error');
+    } else {
+      await refreshContentDialog(productionId, 'Your narration was added and the video was rebuilt. Review it before approval.');
+    }
+  } catch (error) {
+    showToast(error.message, 'error');
+  } finally {
+    $('#loading').classList.remove('active');
+  }
 }
 
 function renderShortsStudio(item) {
@@ -1139,6 +1269,7 @@ function shortFormData(card) {
 }
 
 async function refreshContentDialog(productionId, message) {
+  stopNarrationRecorder();
   if (message) showToast(message);
   if ($('#content-dialog').open) $('#content-dialog').close();
   await refreshDashboard(true);
@@ -1539,6 +1670,22 @@ document.addEventListener('click', async event => {
     return;
   }
 
+  const narrationAction = event.target.closest('[data-narration-record], [data-narration-stop], [data-narration-use], [data-narration-discard]');
+  if (narrationAction) {
+    const productionId = $('#content-review-form')?.dataset.productionId;
+    if (narrationAction.matches('[data-narration-record]')) await startNarrationRecording();
+    else if (narrationAction.matches('[data-narration-stop]')) stopNarrationRecorder();
+    else if (narrationAction.matches('[data-narration-discard]')) {
+      stopNarrationRecorder();
+      narrationRecorder.blob = null;
+      $('[data-narration-take]')?.classList.add('hidden');
+      narrationStatus('');
+    } else if (narrationAction.matches('[data-narration-use]') && productionId && narrationRecorder.blob) {
+      await uploadNarrationRecording(productionId, narrationRecorder.blob, { filename: `narration.${narrationExtension(narrationRecorder.blob.type)}` });
+    }
+    return;
+  }
+
   const rebuildScenes = event.target.closest('[data-rebuild-scenes]');
   if (rebuildScenes) {
     const productionId = rebuildScenes.dataset.rebuildScenes;
@@ -1660,6 +1807,19 @@ document.addEventListener('change', event => {
     const title = event.target.selectedOptions[0]?.dataset.title;
     const input = $('#content-review-form [name="title"]');
     if (title && input) input.value = title;
+  }
+  if (event.target.matches('[data-narration-upload]')) {
+    const file = event.target.files?.[0];
+    const productionId = $('#content-review-form')?.dataset.productionId;
+    if (file && productionId) uploadNarrationRecording(productionId, file);
+    event.target.value = '';
+  }
+  if (event.target.matches('[data-scene-narration-upload]')) {
+    const file = event.target.files?.[0];
+    const card = event.target.closest('[data-scene-card]');
+    const productionId = $('#content-review-form')?.dataset.productionId;
+    if (file && card && productionId) uploadNarrationRecording(productionId, file, { sceneId: card.dataset.sceneCard });
+    event.target.value = '';
   }
   if (event.target.matches('[data-scene-upload]')) {
     const file = event.target.files?.[0];

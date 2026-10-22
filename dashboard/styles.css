@@ -590,6 +590,20 @@ label:has(input:disabled) > span { color: var(--muted); }
 .narration-recovery p:not(.eyebrow) { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 5px 0 0; }
 .narration-evidence { display: block; color: var(--muted); font-size: 10px; margin-top: 6px; font-family: var(--font-mono); }
 
+.narration-studio { display: grid; gap: 12px; border: 1px solid rgba(110, 168, 255, .3); background: var(--blue-soft); border-radius: var(--radius-sm); padding: 12px 14px; }
+.narration-studio-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.narration-studio-head strong { display: block; margin-top: 2px; font-size: 13px; }
+.narration-studio-head p:not(.eyebrow) { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 5px 0 0; }
+.narration-studio-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.narration-teleprompter { max-height: 220px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); background: rgba(8, 11, 16, .55); padding: 12px 14px; font-size: 15px; line-height: 1.6; }
+.narration-teleprompter h5 { margin: 10px 0 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.narration-teleprompter section:first-child h5 { margin-top: 0; }
+.narration-teleprompter p { margin: 0; }
+.narration-take { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.narration-take audio { flex: 1 1 240px; min-width: 200px; height: 34px; }
+.narration-timer { font-family: var(--font-mono); font-size: 13px; color: var(--red-hot); min-width: 48px; }
+.narration-studio-note { margin: 0; color: var(--muted); font-size: 11px; min-height: 14px; }
+
 .scene-list { display: grid; gap: 12px; }
 .scene-card { display: grid; gap: 12px; border: 1px solid var(--line); border-radius: var(--radius); padding: 13px; background: rgba(8, 11, 16, .55); min-width: 0; transition: border-color .15s ease; }
 .scene-card:hover { border-color: var(--line-strong); }
