@@ -5,8 +5,9 @@
  * Usage:
  *   npm run channel:apply -- config/channel-profile.formandheritage.json
  *
- * The file has two optional top-level keys, "profile" and "strategy", shaped like the
- * bodies accepted by PUT /api/profile and PUT /api/operator/strategy. The dashboard must be
+ * The file has optional top-level keys "profile" and "strategy", shaped like the bodies
+ * accepted by PUT /api/profile and PUT /api/operator/strategy, and an optional "env" map
+ * of .env lines that is printed for you to copy (this script never writes .env). The dashboard must be
  * running (npm start). Set DASHBOARD_URL to target another host, and API_KEY if the
  * dashboard requires one. The strategy is saved as a draft unless the file says otherwise;
  * activate it from the Autonomous operator panel when you are ready.
@@ -53,7 +54,13 @@ async function main() {
     console.error('The config file has neither a "profile" nor a "strategy" key.');
     process.exit(1);
   }
-  console.log('Done. Open the dashboard and review Channel setup and Autonomous operator.');
+  if (config.env && typeof config.env === 'object') {
+    console.log('\nAdd or update these lines in your .env file (the dashboard reads them on restart):');
+    for (const [key, value] of Object.entries(config.env)) {
+      console.log(`${key}=${value}`);
+    }
+  }
+  console.log('\nDone. Open the dashboard and review Channel setup and Autonomous operator.');
 }
 
 main().catch(error => {

@@ -5,7 +5,15 @@
     "handle": "@FormHeritage",
     "url": "https://www.youtube.com/@FormHeritage",
     "website": "https://www.formandheritage.com",
-    "instagram": "@FormandHeritage"
+    "instagram": "@FormandHeritage",
+    "owner": "Andres Gonzalez"
+  },
+  "env": {
+    "CHANNEL_NAME": "Form & Heritage",
+    "DEFAULT_AUTHOR": "Andres Gonzalez",
+    "TARGET_AUDIENCE": "Homeowners, interior designers and architects who want custom walnut tables, floating desks and hidden-mount shelving built to last",
+    "YOUTUBE_REGION": "US",
+    "DEFAULT_PRIVACY_STATUS": "private"
   },
   "profile": {
     "channelName": "Form & Heritage",
