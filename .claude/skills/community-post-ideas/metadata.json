@@ -1,0 +1,32 @@
+{
+  "name": "Community Post Ideas",
+  "slug": "community-post-ideas",
+  "description": "30 days of YouTube Community tab ideas — polls, questions, updates — written so your audience actually clicks instead of scrolling past.",
+  "seoTitle": "AI Community Post Ideas for YouTube",
+  "seoDescription": "Generate a month of YouTube Community tab posts — polls, questions, behind-the-scenes — tied to your real channel and cadence. Free.",
+  "long_description": "Most creators either forget the YouTube Community tab exists or post the same 'new video is up!' announcement every time, which trains their audience to scroll past it. Community Post Ideas fixes that by generating a full month of varied, specific posts — polls, open-ended questions, behind-the-scenes detail, hot takes, content teasers — tied to your actual channel, upcoming videos, and real posting cadence, not a generic template.\n\nKey capabilities:\n- Rotates through 7 distinct post types so no two consecutive days feel the same\n- Ties polls and teasers to your real upcoming videos and decisions, not placeholder topics\n- Includes best-day-to-post and expected engagement type for every entry\n- Generates 2-3 A/B phrasing variations for polls and hot takes so you can test what lands\n- Matches your actual posting cadence instead of assuming daily\n\nPerfect for YouTubers who know the Community tab drives engagement but don't have the bandwidth to write a month of varied posts by hand.\n\nExample: Give it your niche, an upcoming video, a recent win, and how many times a week you actually post. Get back a day-by-day calendar with post copy in your voice, timing guidance, and what kind of response to expect — ready to queue up in one sitting.",
+  "category": "COMMUNITY_ENGAGEMENT",
+  "platforms": [
+    "CLAUDE",
+    "CHATGPT",
+    "UNIVERSAL"
+  ],
+  "price": 0,
+  "currency": "USD",
+  "tags": [
+    "community",
+    "engagement",
+    "youtube",
+    "social"
+  ],
+  "complexity": "simple",
+  "files_included": [
+    "SKILL.md",
+    "README.md",
+    "EXAMPLE.md"
+  ],
+  "external_costs": [],
+  "author": "CreatorSkills",
+  "version": "1.0.0",
+  "thumbnail": "https://ekecjszbnzjpsmlylthm.supabase.co/storage/v1/object/public/thumbnails/skills/cs-community-thumb-community-post-ideas-v1.jpg"
+}

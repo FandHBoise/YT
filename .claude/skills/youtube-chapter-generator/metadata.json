@@ -1,0 +1,31 @@
+{
+  "name": "YouTube Chapter Generator",
+  "slug": "youtube-chapter-generator",
+  "description": "Turn a transcript into timestamped YouTube chapters that boost retention and search visibility in under 2 minutes.",
+  "seoDescription": "Turn a transcript into timestamped YouTube chapters that boost retention and search visibility in under 2 minutes.",
+  "long_description": "Turn your transcript, outline, or video description into properly formatted chapter timestamps in under two minutes \u2014 no more troubleshooting why 0:00 is missing or why chapters break randomly, since it follows YouTube's technical rules automatically.\n\nManual timestamping is tedious enough that most creators skip it, leaving retention and search visibility on the table with every upload.\n\nHere's what it saves you:\n- Manual timestamp wrangling that eats 10-20 minutes per video\n- Failed uploads where chapters look broken to viewers\n- Lost viewers who bounce because they can't skip to the section they want\n\nIt also improves performance. YouTube indexes chapter titles as searchable content, and chapters show as clickable previews in search results \u2014 which means higher click-through without any extra metadata work.\n\nPaste your transcript or outline. Get back properly formatted chapters with SEO-optimized titles. Copy them into your description and move on to editing.\n\nWorks for tutorials, reviews, podcasts, interviews, walkthroughs, listicles, and documentaries.",
+  "category": "ANALYTICS_OPTIMIZATION",
+  "platforms": [
+    "CLAUDE",
+    "CHATGPT",
+    "UNIVERSAL"
+  ],
+  "price": 0,
+  "currency": "USD",
+  "tags": [
+    "youtube",
+    "chapters",
+    "timestamps",
+    "seo",
+    "watch-time"
+  ],
+  "complexity": "simple",
+  "files_included": [
+    "SKILL.md",
+    "README.md",
+    "EXAMPLE.md"
+  ],
+  "author": "CreatorSkills",
+  "version": "1.0.0",
+  "thumbnail": "/images/skills/cs-analytics-thumb-youtube-chapter-generator-v1.png"
+}

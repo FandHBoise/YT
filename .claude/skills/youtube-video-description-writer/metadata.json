@@ -1,0 +1,34 @@
+{
+  "name": "YouTube Video Description Writer",
+  "slug": "youtube-video-description-writer",
+  "description": "Generate publish-ready YouTube descriptions in minutes, with better keyword coverage and stronger viewer CTAs.",
+  "seoTitle": "AI YouTube Description Generator Template",
+  "seoDescription": "Free AI YouTube description generator for creators. Turn rough notes into SEO-aware descriptions, pinned comments, and hashtags in minutes.",
+  "long_description": "Stop losing upload momentum at the description box. This free skill turns your rough title, topic, and CTA into two complete YouTube description options you can paste immediately. It keeps keyword usage natural, writes clean mobile-friendly copy, and includes a pinned comment draft to drive more replies. Built for creators who want to publish faster without sacrificing search visibility.",
+  "category": "ANALYTICS_OPTIMIZATION",
+  "platforms": [
+    "CLAUDE",
+    "CHATGPT",
+    "UNIVERSAL"
+  ],
+  "price": 0,
+  "currency": "USD",
+  "tags": [
+    "youtube",
+    "description",
+    "seo",
+    "video-publishing",
+    "free"
+  ],
+  "complexity": "simple",
+  "files_included": [
+    "SKILL.md",
+    "README.md",
+    "EXAMPLE.md",
+    "metadata.json"
+  ],
+  "emailGate": true,
+  "author": "CreatorSkills",
+  "version": "1.0.0",
+  "thumbnail": "https://ekecjszbnzjpsmlylthm.supabase.co/storage/v1/object/public/thumbnails/skills/cs-analytics-thumb-youtube-video-description-writer-v1.jpg"
+}

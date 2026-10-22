@@ -1,0 +1,34 @@
+{
+  "name": "TikTok Script Template",
+  "slug": "tiktok-script-template",
+  "description": "Generate TikTok-native scripts with better hooks, pacing, and comment-focused CTAs in minutes.",
+  "seoTitle": "TikTok Script Template AI for Creators",
+  "seoDescription": "Free TikTok script template AI skill. Create hooks, timestamped scripts, on-screen text, and captions built for TikTok pacing.",
+  "long_description": "Need to post on TikTok without spending an hour scripting? This free skill builds short-form scripts with TikTok-native pacing: fast hooks, concise beats, on-screen text, and comment-driving CTAs.\n\nIt is designed for creators who want to keep output consistent while improving retention in the first few seconds. \n\nPerfect for: Creators posting TikTok content consistently, anyone stuck on hooks and first lines, and social teams that need short-form drafts fast.",
+  "category": "SCRIPTS_OUTLINES",
+  "platforms": [
+    "CLAUDE",
+    "CHATGPT",
+    "UNIVERSAL"
+  ],
+  "price": 0,
+  "currency": "USD",
+  "tags": [
+    "tiktok",
+    "script-template",
+    "hooks",
+    "short-form-video",
+    "free"
+  ],
+  "complexity": "simple",
+  "files_included": [
+    "SKILL.md",
+    "README.md",
+    "EXAMPLE.md",
+    "metadata.json"
+  ],
+  "emailGate": true,
+  "author": "CreatorSkills",
+  "version": "1.0.0",
+  "thumbnail": "https://ekecjszbnzjpsmlylthm.supabase.co/storage/v1/object/public/thumbnails/skills/cs-scripts-thumb-tiktok-script-template-v1.jpg"
+}

@@ -1,0 +1,31 @@
+{
+  "name": "Content Repurposing Planner",
+  "slug": "content-repurposing-planner",
+  "description": "Paste your YouTube video or podcast and get a full repurposing plan: which clips to extract, where to post them, and why.",
+  "seoTitle": "AI Content Repurposing Planner for Creators",
+  "seoDescription": "Paste your YouTube video or podcast and get a full repurposing plan: which clips to extract, where to post them, and exactly how to maximize reach.",
+  "long_description": "The biggest waste in content isn't a bad video. It's a good video that lives on one platform for one week and then dies.\n\nThis skill analyzes your long-form content and builds a repurposing roadmap across 5–10 formats. It identifies the highest-value moments, matches them to the right platforms, and outputs ready-to-use briefs so you can start executing immediately.\n\nWhat you get:\n- Repurposing roadmap: which clips, quotes, and moments to extract\n- Platform matching: Twitter (punchy, opinionated), LinkedIn (professional, insight-focused), Instagram (visual, emotional), TikTok (fast, hook-first)\n- Content briefs with format notes, caption framing, and hashtag strategy\n- Priority ranking: which pieces will drive the most reach vs. quick wins\n\nFree to try. For the skill that actually writes the repurposed content (not just the plan), see Video-to-Everything Repurposer.\n\nPerfect for creators who know they should repurpose but freeze up deciding what goes where.",
+  "category": "CONTENT_REPURPOSING",
+  "platforms": [
+    "CLAUDE",
+    "CHATGPT",
+    "UNIVERSAL"
+  ],
+  "price": 0,
+  "currency": "USD",
+  "tags": [
+    "repurposing",
+    "content-strategy",
+    "multi-platform",
+    "workflow"
+  ],
+  "complexity": "simple",
+  "files_included": [
+    "SKILL.md",
+    "README.md",
+    "EXAMPLE.md"
+  ],
+  "author": "CreatorSkills",
+  "version": "1.0.0",
+  "thumbnail": "/images/skills/cs-content-thumb-content-repurposing-planner-v2.png"
+}

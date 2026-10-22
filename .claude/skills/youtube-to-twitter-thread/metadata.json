@@ -1,0 +1,32 @@
+{
+  "name": "YouTube to Twitter Thread",
+  "slug": "youtube-to-twitter-thread",
+  "description": "Paste a YouTube link, get back a ready-to-post Twitter thread that pulls out the best moments and links back to the full video.",
+  "seoTitle": "AI YouTube to Twitter Thread Converter",
+  "seoDescription": "Turn a YouTube video transcript into a ready-to-post Twitter/X thread — hook-first, character-count checked, in your own voice. Free.",
+  "long_description": "Most creators promote a new video on Twitter/X with a title and a link — and it gets ignored, because it reads like an ad, not a post. YouTube to Twitter Thread fixes that by extracting the 5-7 strongest standalone moments from your video's transcript and writing them as a real thread: a scroll-stopping hook, one idea per tweet, and a close that links back to the full video as 'more detail' instead of repeating what was already said.\n\nKey capabilities:\n- Extracts standalone insights instead of chopping a video description into 280-character pieces\n- Writes a hook-first opening tweet built to stop a scroll, not announce a video\n- Checks every tweet against the 280-character limit before it ships\n- Preserves your actual phrasing and tone from the transcript instead of flattening it into generic listicle language\n- Refuses to guess from a bare URL — asks for a transcript or detailed summary instead of generating a generic thread\n\nPerfect for YouTubers who already post on Twitter/X to promote new videos but currently do it by hand, or skip it because writing a good thread takes longer than it should.\n\nExample: Paste your video transcript in. Get back a numbered thread that opens with your strongest claim, breaks the video's key points into standalone tweets in your own words, and closes with a one-line recap plus your video link — ready to copy and post in under two minutes.",
+  "category": "CONTENT_REPURPOSING",
+  "platforms": [
+    "CLAUDE",
+    "CHATGPT",
+    "UNIVERSAL"
+  ],
+  "price": 0,
+  "currency": "USD",
+  "tags": [
+    "youtube",
+    "twitter",
+    "threads",
+    "repurposing"
+  ],
+  "complexity": "simple",
+  "files_included": [
+    "SKILL.md",
+    "README.md",
+    "EXAMPLE.md"
+  ],
+  "external_costs": [],
+  "author": "CreatorSkills",
+  "version": "1.0.0",
+  "thumbnail": "https://ekecjszbnzjpsmlylthm.supabase.co/storage/v1/object/public/thumbnails/skills/cs-repurposing-thumb-youtube-to-twitter-thread-v1.jpg"
+}

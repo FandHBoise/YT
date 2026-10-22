@@ -1,0 +1,32 @@
+{
+  "name": "Instagram Reels Script Writer",
+  "slug": "instagram-reels-script-writer",
+  "description": "Get shot-ready Reels scripts in 15, 30, 60, or 90 seconds — with hook, body, CTA, caption, and audio suggestions.",
+  "seoTitle": "AI Instagram Reels Script Writer",
+  "seoDescription": "Get shot-ready Instagram Reels scripts in 15, 30, 60, or 90 seconds — with hook, body, CTA, caption, and audio suggestions for every format.",
+  "long_description": "Staring at a blank page before filming is the worst. This skill writes complete, shot-ready Instagram Reels scripts tailored to your niche, audience, and goal. Give it your topic, length, and what you want viewers to do — it outputs a second-by-second script with visual cues, spoken copy, on-screen text callouts, a caption, and 3 audio suggestions. Based on 8 named hook types built to stop the scroll.",
+  "category": "SCRIPTS_OUTLINES",
+  "platforms": [
+    "CLAUDE",
+    "CHATGPT",
+    "UNIVERSAL"
+  ],
+  "price": 0,
+  "currency": "USD",
+  "tags": [
+    "instagram",
+    "reels",
+    "scripts",
+    "short-form",
+    "social-media"
+  ],
+  "complexity": "simple",
+  "files_included": [
+    "SKILL.md",
+    "README.md",
+    "EXAMPLE.md"
+  ],
+  "author": "CreatorSkills",
+  "version": "1.0.0",
+  "thumbnail": "/images/skills/cs-scripts-thumb-instagram-reels-script-writer-v2.png"
+}

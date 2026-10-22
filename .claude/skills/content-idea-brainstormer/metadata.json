@@ -1,0 +1,35 @@
+{
+  "name": "Content Idea Brainstormer",
+  "slug": "content-idea-brainstormer",
+  "description": "Never stare at a blank upload schedule again — get 10 specific, ready-to-film content ideas for any niche in seconds.",
+  "seoTitle": "AI Content Idea Generator for Creators",
+  "seoDescription": "Never stare at a blank upload schedule again. Get 10 specific, ready-to-film content ideas for any niche in seconds — free AI skill for creators.",
+  "long_description": "Coming up with good ideas is the hardest part of being a creator — and the most time-consuming. This skill turns Claude or ChatGPT into your personal content strategist, generating 10 distinct, ready-to-film ideas for any niche you throw at it. Each idea comes with a working title, the angle that makes it interesting, and why it's likely to perform. The ideas span the full mix: evergreen tutorials, trending formats, personal stories, hot takes, behind-the-scenes, and educational deep dives. Give it your niche and walk away with a week's worth of content.",
+  "category": "SCRIPTS_OUTLINES",
+  "platforms": [
+    "CLAUDE",
+    "CHATGPT",
+    "UNIVERSAL"
+  ],
+  "price": 0,
+  "currency": "USD",
+  "tags": [
+    "content-ideas",
+    "brainstorming",
+    "youtube",
+    "tiktok",
+    "instagram",
+    "video-ideas",
+    "free"
+  ],
+  "complexity": "standard",
+  "files_included": [
+    "SKILL.md",
+    "README.md",
+    "EXAMPLE.md"
+  ],
+  "external_costs": [],
+  "author": "CreatorSkills",
+  "version": "1.0.0",
+  "thumbnail": "/images/skills/cs-scripts-thumb-content-idea-brainstormer-v1.png"
+}
