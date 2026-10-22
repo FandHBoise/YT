@@ -1,12 +1,19 @@
 {
   "$comment": "Channel profile and autonomous operator strategy for Form & Heritage, Boise, Idaho. Apply with: npm run channel:apply -- config/channel-profile.formandheritage.json",
+  "channel": {
+    "name": "Form & Heritage",
+    "handle": "@FormHeritage",
+    "url": "https://www.youtube.com/@FormHeritage",
+    "website": "https://www.formandheritage.com",
+    "instagram": "@FormandHeritage"
+  },
   "profile": {
     "channelName": "Form & Heritage",
     "goal": "Earn custom furniture commissions from homeowners, interior designers and architects by showing how engineered furniture is designed, load-checked and built in a Boise studio.",
     "targetAudience": "Homeowners furnishing a dining room, office or kitchen; interior designers and architects sourcing custom walnut tables, floating desks and hidden-mount shelving; woodworkers and engineers curious how CAD and load analysis apply to furniture.",
     "brandVoice": "Calm, precise and plain-spoken. An engineer explaining decisions, not a salesman. Show the reasoning: loads, spans, joinery, why a cable or a steel rod is there. No hype, no jargon without a one-line explanation.",
     "defaultStyle": "educational",
-    "callToAction": "Have a space in mind? Start a project at formandheritage.com and we reply within one business day with questions, ideas and a rough range.",
+    "callToAction": "Subscribe to @FormHeritage for the next build. Have a space in mind? Start a project at formandheritage.com and we reply within one business day with questions, ideas and a rough range.",
     "visualStyle": "warm walnut and black steel, natural workshop light, clean CAD and simulation views, minimal text overlays",
     "timezone": "America/Boise",
     "bannedTopics": [
@@ -36,7 +43,7 @@
     "targetWindowDays": 28,
     "monthlyBudget": 0,
     "outcomeCurrency": "USD",
-    "constraints": "Every video must be approved before publishing. Only show pieces Form & Heritage actually built or designed; label renders as renders. Never state a load rating that has not been checked. Keep each video under 10 minutes. Use the free local slideshow unless a video provider is explicitly enabled. Mention Boise, Idaho naturally for local discovery.",
+    "constraints": "Every video must be approved before publishing. Only show pieces Form & Heritage actually built or designed; label renders as renders. Never state a load rating that has not been checked. Keep each video under 10 minutes. Use the free local slideshow unless a video provider is explicitly enabled. Mention Boise, Idaho naturally for local discovery. Refer to the channel as Form & Heritage and the handle as @FormHeritage; the website is formandheritage.com and Instagram is @FormandHeritage.",
     "status": "draft"
   }
 }
