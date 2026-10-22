@@ -1,0 +1,42 @@
+{
+  "$comment": "Channel profile and autonomous operator strategy for Form & Heritage, Boise, Idaho. Apply with: npm run channel:apply -- config/channel-profile.formandheritage.json",
+  "profile": {
+    "channelName": "Form & Heritage",
+    "goal": "Earn custom furniture commissions from homeowners, interior designers and architects by showing how engineered furniture is designed, load-checked and built in a Boise studio.",
+    "targetAudience": "Homeowners furnishing a dining room, office or kitchen; interior designers and architects sourcing custom walnut tables, floating desks and hidden-mount shelving; woodworkers and engineers curious how CAD and load analysis apply to furniture.",
+    "brandVoice": "Calm, precise and plain-spoken. An engineer explaining decisions, not a salesman. Show the reasoning: loads, spans, joinery, why a cable or a steel rod is there. No hype, no jargon without a one-line explanation.",
+    "defaultStyle": "educational",
+    "callToAction": "Have a space in mind? Start a project at formandheritage.com and we reply within one business day with questions, ideas and a rough range.",
+    "visualStyle": "warm walnut and black steel, natural workshop light, clean CAD and simulation views, minimal text overlays",
+    "timezone": "America/Boise",
+    "bannedTopics": [
+      "politics",
+      "pricing of other local makers",
+      "client names or addresses without consent",
+      "unverified structural claims"
+    ]
+  },
+  "strategy": {
+    "objective": "Build a steady flow of qualified custom furniture inquiries from the Boise area and from designers nationwide by publishing one engineering-led furniture video per week that shows the design, analysis and build of real pieces.",
+    "audience": "Homeowners, interior designers and architects who want custom walnut tables, floating desks or hidden-mount shelving built to last; secondary audience of makers and engineers interested in CAD, load checks and topology optimization applied to furniture.",
+    "valueProposition": "The only furniture studio in Boise where a mechanical engineer models and load-checks every piece before it is cut. Viewers see exactly why a table, desk or shelf will hold what they put on it, for generations.",
+    "contentPillars": [
+      "Build stories: one commissioned piece from room model to install",
+      "Engineering explained: cantilevers, cables, hidden rods, topology-optimized brackets",
+      "Shop techniques: slab matching, butterfly keys, CNC and lathe work",
+      "Buyer's guides: choosing a dining table, floating desk or wall shelf that lasts",
+      "Workshop notes: prototypes, 3D prints, carved topographic maps"
+    ],
+    "cadencePerWeek": 1,
+    "videosPerRun": 1,
+    "defaultFormat": "explainer",
+    "defaultLength": "medium",
+    "successMetric": "Project inquiries that mention YouTube, tracked through the contact form, plus average view duration above 50 percent",
+    "primaryKpi": "engagement",
+    "targetWindowDays": 28,
+    "monthlyBudget": 0,
+    "outcomeCurrency": "USD",
+    "constraints": "Every video must be approved before publishing. Only show pieces Form & Heritage actually built or designed; label renders as renders. Never state a load rating that has not been checked. Keep each video under 10 minutes. Use the free local slideshow unless a video provider is explicitly enabled. Mention Boise, Idaho naturally for local discovery.",
+    "status": "draft"
+  }
+}
